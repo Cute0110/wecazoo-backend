@@ -1,6 +1,9 @@
 const config = require("../config/main");
 const axios = require('axios');
 const { eot, dot } = require('../utils/cryptoUtils');
+const db = require("../models");
+const User = db.user;
+const UserGameHistory = db.userGameHistory;
 
 // exports.createApiUser = async (userCode) => {
 //     try {
@@ -106,8 +109,6 @@ exports.apiSlotGameLaunch = async (req, res) => {
         };
         const result = await axios.post(nexusURL, jsonBody);
 
-        console.log(result.data);
-
         if (result.data.status == 0) {
             return res.json(eot({
                 status: 0,
@@ -158,8 +159,86 @@ exports.apiLiveGameLaunch = async (req, res) => {
 
 exports.handleApiRequest = async (req, res) => {
     try {
-        console.log(111, req.body);
+        const { method, user_code, agent_code }= req.body;
+        const user = await User.findOne({ where: { userCode: user_code } });
+
+        switch (method) {
+            case 'user_balance':
+                if (!user) {
+                    return res.json({        
+                        "status": 0,
+                        "user_balance": 0,
+                        "msg": "INTERNAL_ERROR"
+                    })
+                }
+
+                return res.json({
+                    "status": 1,
+                    "user_balance": user.balance,
+                })
+                break;
+            case 'transaction':
+                const { game_type } = req.body;
+                if (game_type == "slot") {
+                    const { slot } = req.body;
+                    const { bet_money, win_money, txn_type, game_code, provider_code} = slot;
+
+                    const newBalance = user.balance - bet_money + win_money;
+
+                    await User.update({ balance: newBalance}, {where : {userCode: user_code}});
+                    await UserGameHistory.create({ 
+                        agent_code, 
+                        userId: user.id, 
+                        user_code, 
+                        game_type, 
+                        txn_type, 
+                        userPrevBalance: user.balance, 
+                        userAfterBalance: newBalance, 
+                        bet_amount: bet_money, 
+                        win_amount: win_money, 
+                        provider_code, 
+                        game_code 
+                    });
+
+                    return res.json({
+                        "status": 1,
+                        "user_balance": newBalance,
+                    })
+                } else if (game_type == "live") {
+                    const { live } = req.body;
+                    const { bet_money, win_money, txn_type, game_code, provider_code} = live;
+
+                    const newBalance = user.balance - bet_money + win_money;
+
+                    await User.update({ balance: newBalance}, {where : {userCode: user_code}});
+                    await UserGameHistory.create({ 
+                        agent_code,
+                        userId: user.id, 
+                        user_code, 
+                        game_type, 
+                        txn_type, 
+                        userPrevBalance: user.balance, 
+                        userAfterBalance: newBalance, 
+                        bet_amount: bet_money, 
+                        win_amount: win_money, 
+                        provider_code, 
+                        game_code 
+                    });
+
+                    return res.json({
+                        "status": 1,
+                        "user_balance": newBalance,
+                    })
+                }
+                
+                // Payment failed
+                break;
+        }
     } catch (error) {
-        return errorHandler(res, error);
+        return res.json({        
+            "status": 0,
+            "user_balance": 0,
+            "msg": "INTERNAL_ERROR"
+        })
     }
 }
