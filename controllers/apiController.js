@@ -2,39 +2,39 @@ const config = require("../config/main");
 const axios = require('axios');
 const { eot, dot } = require('../utils/cryptoUtils');
 
-exports.createApiUser = async (userCode) => {
-    try {
-        const nexusURL = config.apiEndPoint;
-        const params = {
-            "method": "user_create",
-            "agent_code": config.agent_code,
-            "agent_token": config.agent_token,
-            "user_code": userCode,
-        }
-        const nexusUser = await axios.post(nexusURL, params);
+// exports.createApiUser = async (userCode) => {
+//     try {
+//         const nexusURL = config.apiEndPoint;
+//         const params = {
+//             "method": "user_create",
+//             "agent_code": config.agent_code,
+//             "agent_token": config.agent_token,
+//             "user_code": userCode,
+//         }
+//         const nexusUser = await axios.post(nexusURL, params);
 
-        return nexusUser;
-    } catch (error) {
-        return errorHandler(res, error);
-    }
-}
+//         return nexusUser;
+//     } catch (error) {
+//         return errorHandler(res, error);
+//     }
+// }
 
-exports.apiGetUserBalance = async (userCode) => {
-    try {
-        const nexusURL = config.apiEndPoint;
-        const params = {
-            "method": "money_info",
-            "agent_code": config.agent_code,
-            "agent_token": config.agent_token,
-            "user_code": userCode,
-        }
-        const nexusUser = await axios.post(nexusURL, params);
+// exports.apiGetUserBalance = async (userCode) => {
+//     try {
+//         const nexusURL = config.apiEndPoint;
+//         const params = {
+//             "method": "money_info",
+//             "agent_code": config.agent_code,
+//             "agent_token": config.agent_token,
+//             "user_code": userCode,
+//         }
+//         const nexusUser = await axios.post(nexusURL, params);
 
-        return nexusUser;
-    } catch (error) {
-        return errorHandler(res, error);
-    }
-}
+//         return nexusUser;
+//     } catch (error) {
+//         return errorHandler(res, error);
+//     }
+// }
 
 exports.apiGetProviderList = async (req, res) => {
     try {
@@ -49,7 +49,7 @@ exports.apiGetProviderList = async (req, res) => {
         if (result.data.status == 0) {
             return res.json(eot({
                 status: 0,
-                msg: "Get providers failed!"
+                msg: result.data.msg,
             }));
         }
 
@@ -77,7 +77,7 @@ exports.apiGetGameList = async (req, res) => {
         if (result.data.status == 0) {
             return res.json(eot({
                 status: 0,
-                msg: "Get games failed!"
+                msg: result.data.msg,
             }));
         }
 
@@ -111,7 +111,7 @@ exports.apiSlotGameLaunch = async (req, res) => {
         if (result.data.status == 0) {
             return res.json(eot({
                 status: 0,
-                msg: "Game launch failed!"
+                msg: result.data.msg,
             }));
         }
 
@@ -143,7 +143,7 @@ exports.apiLiveGameLaunch = async (req, res) => {
         if (result.data.status == 0) {
             return res.json(eot({
                 status: 0,
-                msg: "Game launch failed!"
+                msg: result.data.msg,
             }));
         }
 

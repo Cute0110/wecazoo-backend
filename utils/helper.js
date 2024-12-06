@@ -1,4 +1,5 @@
 const Joi = require("joi");
+const { eot, dot } = require('./cryptoUtils');
 
 exports.errorHandler = (res, error, statusCode = 400) => {
     let errorMessage = "";
@@ -10,10 +11,10 @@ exports.errorHandler = (res, error, statusCode = 400) => {
         errorMessage = error;
     }
 
-    return res.status(statusCode).json({
+    return res.status(statusCode).json(eot({
         status: 0,
-        message: errorMessage,
-    });
+        msg: errorMessage,
+    }));
 };
 
 exports.validateSchema = (res, input, schema) => {
@@ -21,11 +22,10 @@ exports.validateSchema = (res, input, schema) => {
     if (result.error) {
         console.error(result.error);
 
-        res.status(400).json({
-            success: false,
-            error: "Validation Error",
-            validate: result.error,
-        });
+        res.status(400).json(eot({
+            status: 0,
+            msg: "Validation Error",
+        }));
 
         return false;
     }

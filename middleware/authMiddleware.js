@@ -9,7 +9,7 @@ const config = require("../config/main");
 var authenticate = async (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
-        if (!authHeader) return res.status(401).json({ message: 'No token provided' });
+        if (!authHeader) return res.status(401).json(eot({ status: 0, msg: 'No token provided' }));
 
         const token = authHeader;
 
@@ -19,11 +19,11 @@ var authenticate = async (req, res, next) => {
             const user = await User.findOne({ where: { id: decoded.userId } });
 
             if (!user) {
-                return res.status(401).json({ message: 'Invalid or expired token' });
+                return res.status(401).json(eot({ status: 0, msg: 'Invalid or expired token' }));
             }
             return next();
         } catch (err) {
-            return res.status(401).json({ message: 'Invalid or expired token' });
+            return res.status(401).json(eot({ status: 0, msg: 'Invalid or expired token' }));
         }
     } catch (error) {
         return errorHandler(res, error);

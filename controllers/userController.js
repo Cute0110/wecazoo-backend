@@ -54,6 +54,7 @@ exports.register = async (req, res) => {
 
         return res.json(eot({
             status: 1,
+            msg: "Register success!",
             result: newUser,
         }));
     } catch (error) {
@@ -93,7 +94,7 @@ exports.login = async (req, res) => {
         const userData = { emailAddress: user.emailAddress, userCode: user.userCode, userName: user.userName, balance: user.balance, avatarURL: user.avatarURL};
 
         const token = jwt.sign({ userId: user.id, username: user.username }, config.SECRET_KEY, { expiresIn: '1d' });
-        return res.json(eot({ status: 1, token, userData }));
+        return res.json(eot({ status: 1, msg: "Login success!", token, userData }));
     } catch (error) {
         return errorHandler(res, error);
     }
@@ -103,7 +104,7 @@ exports.checkSession = async (req, res) => {
     try {
         const authHeader = req.headers.authorization;
         if (!authHeader) {
-            return res.json(eot({status: false, message: 'No token provided' }));
+            return res.json(eot({status: 0, msg: 'No token provided' }));
         }
 
         const token = authHeader;
@@ -112,17 +113,17 @@ exports.checkSession = async (req, res) => {
         const user = await User.findOne({ where: { id: decoded.userId } });
 
         if (!user) {
-            return res.json(eot({ status: false, message: 'Invalid or expired token' }));
+            return res.json(eot({ status: 0, msg: 'Invalid or expired token' }));
         }
         // const nexusUser = await apiController.apiGetUserBalance(user.userCode);
 
         // if (nexusUser.data.status == 0) {
-        //     return res.status(401).json({ message: 'Connection Failed!' });
+        //     return res.status(401).json({ msg: 'Connection Failed!' });
         // }
 
         const userData = { emailAddress: user.emailAddress, userCode: user.userCode, userName: user.userName, balance: user.balance, avatarURL: user.avatarURL };
 
-        return res.json(eot({ status: true, message: 'Access granted', userData }));
+        return res.json(eot({ status: 1, msg: 'Access granted', userData }));
     } catch (error) {
         return errorHandler(res, error);
     }
