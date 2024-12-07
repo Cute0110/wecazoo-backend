@@ -41,6 +41,11 @@ router.post("/game_list", authenticate, apiController.apiGetGameList);
 router.post("/slot_game_launch", authenticate, apiController.apiSlotGameLaunch);
 router.post("/live_game_launch", authenticate, apiController.apiLiveGameLaunch);
 
+router.post("/get_all_users", authenticate, userController.getAllUsers);
+router.post("/user_transaction", authenticate, userController.userTransaction);
+router.post("/user_delete", authenticate, userController.userDelete);
+router.post("/user_status_change", authenticate, userController.userStatusChange);
+
 router.post("/createInvoice", authenticate, paymentController.createInvoice);
 router.post("/withdraw", authenticate, paymentController.withdraw);
 

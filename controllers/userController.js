@@ -91,7 +91,7 @@ exports.login = async (req, res) => {
         //     }));
         // }
 
-        const userData = { emailAddress: user.emailAddress, userCode: user.userCode, userName: user.userName, balance: user.balance, avatarURL: user.avatarURL};
+        const userData = { emailAddress: user.emailAddress, userCode: user.userCode, userName: user.userName, balance: user.balance, avatarURL: user.avatarURL };
 
         const token = jwt.sign({ userId: user.id, username: user.username }, config.SECRET_KEY, { expiresIn: '1d' });
         return res.json(eot({ status: 1, msg: "Login success!", token, userData }));
@@ -104,7 +104,7 @@ exports.checkSession = async (req, res) => {
     try {
         const authHeader = req.headers.authorization;
         if (!authHeader) {
-            return res.json(eot({status: 0, msg: 'No token provided' }));
+            return res.json(eot({ status: 0, msg: 'No token provided' }));
         }
 
         const token = authHeader;
@@ -128,3 +128,85 @@ exports.checkSession = async (req, res) => {
         return errorHandler(res, error);
     }
 };
+
+exports.getAllUsers = async (req, res) => {
+    try {
+        const { start, length, search, order, dir } = dot(req.body);
+
+        let query = {};
+
+        if (search && search.trim() !== "") {
+            query = {
+                [Op.or]: [
+                    { userCode: { [Op.substring]: search } },
+                    { emailAddress: { [Op.substring]: search } }
+                ],
+            };
+        }
+
+        const data = await User.findAndCountAll({
+            where: query,
+            offset: Number(start),
+            limit: Number(length),
+            order: [
+                [order, dir],
+            ],
+        });
+
+        return res.json(eot({
+            status: 1,
+            data: data.rows,
+            length: Number(length),
+            start: Number(start),
+            totalCount: data.count,
+        }));
+    } catch (error) {
+        return errorHandler(res, error);
+    }
+};
+
+exports.userTransaction = async (req, res) => {
+    try {
+        const { id, newBalance, amount, chargeType } = dot(req.body);
+
+        const user = await User.update({balance: newBalance}, {where: {id}})
+
+        return res.json(eot({
+            status: 1,
+            msg: "success"
+        }));
+    } catch (error) {
+        return errorHandler(res, error);
+    }
+};
+
+exports.userStatusChange = async (req, res) => {
+    try {
+        const { id, status } = dot(req.body);
+
+        const user = await User.update({status}, {where: {id}})
+
+        return res.json(eot({
+            status: 1,
+            msg: "success"
+        }));
+    } catch (error) {
+        return errorHandler(res, error);
+    }
+};
+
+exports.userDelete = async (req, res) => {
+    try {
+        const { id } = dot(req.body);
+
+        const user = await User.destroy({where: {id}})
+
+        return res.json(eot({
+            status: 1,
+            msg: "success"
+        }));
+    } catch (error) {
+        return errorHandler(res, error);
+    }
+};
+
