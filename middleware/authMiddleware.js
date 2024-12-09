@@ -2,6 +2,8 @@ const db = require("../models");
 const User = db.user;
 const jwt = require('jsonwebtoken');
 const config = require("../config/main");
+const { errorHandler } = require("../utils/helper");
+const { eot, dot } = require('../utils/cryptoUtils');
 
 // First we call the model using the above code.
 // We pass in the token from the request header and see if we can get the
@@ -30,25 +32,27 @@ var authenticate = async (req, res, next) => {
     }
 };
 
-// var adminAuthenticate = (req, res, next) => {
-//   var token = req.header("x-admin-auth");
-//   getAdminByToken(token)
-//     .then((result) => {
-//       if (result) {
-//         next();
-//       } else {
-//         return res.status(HttpStatusCodes.SESSION_EXPIRED).send({
-//           result: false,
-//           message: "Session expired. Please login again!",
-//         });
-//       }
-//     })
-//     .catch((e) => {
-//       return res.status(HttpStatusCodes.UNAUTHORIZED).send({
-//         result: false,
-//         message: "Unauthorized. Please provide x-auth key in request header!",
-//       });
-//     });
-// };
+var adminAuthenticate = async (req, res, next) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (!authHeader) return res.status(401).json(eot({ status: 0, msg: 'No token provided' }));
 
-module.exports = { authenticate };
+        const token = authHeader;
+        const decoded = jwt.verify(token, config.SECRET_KEY);
+
+        const user = await User.findOne({ where: { id: decoded.userId } });
+
+        if (!user) {
+            return res.status(401).json(eot({ status: 0, msg: 'Invalid or expired token' }));
+        }
+
+        if (user.userCode != config.admin1 && user.userCode != config.admin2) {
+            return res.status(401).json(eot({ status: 0, msg: 'Invalid admin' }));
+        }
+        return next();
+    } catch (error) {
+        return errorHandler(res, error);
+    }
+};
+
+module.exports = { authenticate, adminAuthenticate };
