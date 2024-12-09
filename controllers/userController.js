@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken');
 const config = require("../config/main");
 const apiController = require("./apiController");
 const { eot, dot } = require('../utils/cryptoUtils');
+const { Op } = require("sequelize");
 
 exports.register = async (req, res) => {
     try {
@@ -40,7 +41,7 @@ exports.register = async (req, res) => {
 
         const newUser = await User.create({ emailAddress, password: hashedPassword, ipAddress });
 
-        const userCode = "wcz_test" + newUser.id + emailAddress.split("")[0] + password.split("")[0] + Math.floor(Math.random() * 1000);
+        const userCode = "wecazoo_" + newUser.id + emailAddress.split("")[0] + password.split("")[0] + Math.floor(Math.random() * 1000);
         await User.update({ userCode, userName: userCode }, { where: { id: newUser.id } })
 
         // const nexusUser = await apiController.createApiUser(userCode);
@@ -143,6 +144,13 @@ exports.getAllUsers = async (req, res) => {
                 ],
             };
         }
+
+        query = {
+            [Op.and]: [
+                query,
+                { userCode: { [Op.notIn]: [config.admin1, config.admin2] } }
+            ]
+        };
 
         const data = await User.findAndCountAll({
             where: query,
