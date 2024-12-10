@@ -7,6 +7,7 @@ const { createInvoice } = require("../utils/cryptoPayment");
 const { eot, dot } = require('../utils/cryptoUtils');
 const config = require('../config/main');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 
 exports.createInvoice = async (req, res) => {
     try {
@@ -100,6 +101,26 @@ exports.withdraw = async (req, res) => {
 exports.handleDepositCallback = async (req, res) => {
     try {
 
+        const rawBody = JSON.stringify(req.body);
+
+        // Generate the HMAC SHA-512 signature
+        const computedSignature = crypto
+            .createHmac('sha512', config.nowPayment.ipnSecret)
+            .update(rawBody)
+            .digest('hex');
+
+        // Retrieve the received signature from the headers
+        const receivedSignature = req.headers['x-nowpayments-sig'];
+
+        // Compare the computed signature with the received signature
+        if (computedSignature === receivedSignature) {
+            console.log('Signature is valid.');
+            // Process the callback
+        } else {
+            console.error('Invalid signature.');
+            return errorHandler(res, "Invalid signature.");
+            // Handle the invalid signature case
+        }
         const { payment_status, payment_id, price_amount, outcome_amount, order_id } = req.body;
 
         const ubh = await UserBalanceHistory.findOne({ where: { id: order_id } });
