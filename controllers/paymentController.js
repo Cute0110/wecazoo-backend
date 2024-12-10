@@ -121,7 +121,7 @@ exports.handleDepositCallback = async (req, res) => {
             return errorHandler(res, "Invalid signature.");
             // Handle the invalid signature case
         }
-        const { payment_status, payment_id, price_amount, outcome_amount, order_id } = req.body;
+        const { payment_status, actually_paid, price_amount, outcome_amount, order_id } = req.body;
 
         const ubh = await UserBalanceHistory.findOne({ where: { id: order_id } });
 
@@ -140,20 +140,40 @@ exports.handleDepositCallback = async (req, res) => {
         }
 
         const newBalance = user.balance + outcome_amount;
+        let lockedBalance = 0;
 
+        console.log("Deposit Info : ", req.body);
         // Handle the payment status
         switch (payment_status) {
             case 'finished':
-                await User.update({ balance: newBalance }, { where: { id: user.id } });
-                await UserBalanceHistory.update({ userAfterBalance: newBalance, amount: outcome_amount, status: "Success" }, { where: { id: ubh.id } })
+                if (outcome_amount >= 100) {
+                    lockedBalance = outcome_amount / 2;
+                } else if (outcome_amount >= 50) {
+                    lockedBalance = outcome_amount / 3;
+                } else if (outcome_amount >= 20) {
+                    lockedBalance = outcome_amount / 4;
+                } else {
+                    lockedBalance = outcome_amount / 5;
+                }
+                await User.update({ balance: newBalance, lockedBalance }, { where: { id: user.id } });
+                await UserBalanceHistory.update({ userAfterBalance: newBalance, sentAmount: actually_paid, receivedAmount: outcome_amount, status: "Success" }, { where: { id: ubh.id } })
                 break;
             case 'failed':
                 await UserBalanceHistory.update({ amount: price_amount, status: "Failed" }, { where: { id: ubh.id } })
                 // Payment failed
                 break;
             case 'partially_paid':
-                await User.update({ balance: newBalance }, { where: { id: user.id } });
-                await UserBalanceHistory.update({ userAfterBalance: newBalance, amount: outcome_amount, status: "Success" }, { where: { id: ubh.id } })
+                if (outcome_amount >= 100) {
+                    lockedBalance = outcome_amount / 2;
+                } else if (outcome_amount >= 50) {
+                    lockedBalance = outcome_amount / 3;
+                } else if (outcome_amount >= 20) {
+                    lockedBalance = outcome_amount / 4;
+                } else {
+                    lockedBalance = outcome_amount / 5;
+                }
+                await User.update({ balance: newBalance, lockedBalance }, { where: { id: user.id } });
+                await UserBalanceHistory.update({ userAfterBalance: newBalance, sentAmount: actually_paid, receivedAmount: outcome_amount, status: "Success" }, { where: { id: ubh.id } })
                 // Handle partial payment
                 break;
         }

@@ -43,6 +43,10 @@ module.exports = (sequelize, Sequelize) => {
                 type: Sequelize.DOUBLE(20, 5),
                 defaultValue: 0,
             },
+            lockedBalance: {
+                type: Sequelize.DOUBLE(20, 5),
+                defaultValue: 0,
+            },
             status: {
                 type: Sequelize.BOOLEAN,
                 defaultValue: true,

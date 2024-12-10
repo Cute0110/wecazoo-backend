@@ -23,7 +23,11 @@ module.exports = (sequelize, Sequelize) => {
                 type: Sequelize.DOUBLE(20, 5),
                 defaultValue: 0,
             },
-            amount: {
+            sentAmount: {
+                type: Sequelize.DOUBLE(20, 5),
+                defaultValue: 0,
+            },
+            receivedAmount: {
                 type: Sequelize.DOUBLE(20, 5),
                 defaultValue: 0,
             },

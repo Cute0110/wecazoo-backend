@@ -3,6 +3,7 @@ const axios = require('axios');
 const { eot, dot } = require('../utils/cryptoUtils');
 const db = require("../models");
 const User = db.user;
+const UserBetInfo = db.userBetInfo;
 const UserGameHistory = db.userGameHistory;
 
 // exports.createApiUser = async (userCode) => {
@@ -161,6 +162,7 @@ exports.handleApiRequest = async (req, res) => {
     try {
         const { method, user_code, agent_code }= req.body;
         const user = await User.findOne({ where: { userCode: user_code } });
+        const betInfo = await UserBetInfo.findOne( { where: {userId: user.id}});
 
         switch (method) {
             case 'user_balance':
@@ -186,6 +188,7 @@ exports.handleApiRequest = async (req, res) => {
                     const newBalance = user.balance - bet_money + win_money;
 
                     await User.update({ balance: newBalance}, {where : {userCode: user_code}});
+                    await UserBetInfo.update({ totalBet: betInfo.totalBet + bet_money, totalWin: betInfo.totalWin + win_money, unlockedBalance: betInfo.unlockedBalance + bet_money / 100}, {where : {id: betInfo.id}});
                     await UserGameHistory.create({ 
                         agent_code, 
                         userId: user.id, 
@@ -211,6 +214,7 @@ exports.handleApiRequest = async (req, res) => {
                     const newBalance = user.balance - bet_money + win_money;
 
                     await User.update({ balance: newBalance}, {where : {userCode: user_code}});
+                    await UserBetInfo.update({ totalBet: betInfo.totalBet + bet_money, totalWin: betInfo.totalWin + win_money, unlockedBalance: betInfo.unlockedBalance + bet_money / 100}, {where : {id: betInfo.id}});
                     await UserGameHistory.create({ 
                         agent_code,
                         userId: user.id, 
@@ -235,6 +239,7 @@ exports.handleApiRequest = async (req, res) => {
                 break;
         }
     } catch (error) {
+        console.log(error);
         return res.json({        
             "status": 0,
             "user_balance": 0,

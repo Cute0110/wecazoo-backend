@@ -1,6 +1,7 @@
 const Joi = require("joi");
 const db = require("../models");
 const User = db.user;
+const UserBetInfo = db.userBetInfo;
 const { errorHandler, validateSchema } = require("../utils/helper");
 const bcrypt = require("bcrypt");
 const jwt = require('jsonwebtoken');
@@ -44,6 +45,8 @@ exports.register = async (req, res) => {
         const userCode = "wecazoo_" + newUser.id + emailAddress.split("")[0] + password.split("")[0] + Math.floor(Math.random() * 1000);
         await User.update({ userCode, userName: userCode }, { where: { id: newUser.id } })
 
+        await UserBetInfo.create({ userId: newUser.id});
+
         // const nexusUser = await apiController.createApiUser(userCode);
 
         // if (nexusUser.data.status == 0) {
@@ -83,16 +86,28 @@ exports.login = async (req, res) => {
             }));
         }
 
-        // const nexusUser = await apiController.apiGetUserBalance(user.userCode);
+        const betInfo = await UserBetInfo.findOne({ where: { userId: user.id}});
 
-        // if (nexusUser.data.status == 0) {
-        //     return res.json(eot({
-        //         status: 0,
-        //         msg: "Login Failed!",
-        //     }));
-        // }
+        let totalBet = 0;
+        let totalWin = 0;
+        let unlockedBalance = 0;
 
-        const userData = { emailAddress: user.emailAddress, userCode: user.userCode, userName: user.userName, balance: user.balance, avatarURL: user.avatarURL };
+        if (betInfo) {
+            totalBet = betInfo.totalBet;
+            totalWin = betInfo.totalWin;
+            unlockedBalance = betInfo.unlockedBalance;
+        }
+        const userData = { 
+            emailAddress: user.emailAddress, 
+            userCode: user.userCode, 
+            userName: user.userName, 
+            balance: user.balance, 
+            lockedBalance: user.lockedBalance, 
+            totalBet, 
+            totalWin,
+            unlockedBalance,
+            avatarURL: user.avatarURL 
+        };
 
         const token = jwt.sign({ userId: user.id, username: user.username }, config.SECRET_KEY, { expiresIn: '1d' });
         return res.json(eot({ status: 1, msg: "Login success!", token, userData }));
@@ -111,18 +126,34 @@ exports.checkSession = async (req, res) => {
         const token = authHeader;
         const decoded = jwt.verify(token, config.SECRET_KEY);
 
-        const user = await User.findOne({ where: { id: decoded.userId } });
+        const user = await User.findOne({ where: { id: decoded.userId } });        
 
         if (!user) {
             return res.json(eot({ status: 0, msg: 'Invalid or expired token' }));
         }
-        // const nexusUser = await apiController.apiGetUserBalance(user.userCode);
+        const betInfo = await UserBetInfo.findOne({ where: { userId: decoded.userId}});
 
-        // if (nexusUser.data.status == 0) {
-        //     return res.status(401).json({ msg: 'Connection Failed!' });
-        // }
+        let totalBet = 0;
+        let totalWin = 0;
+        let unlockedBalance = 0;
 
-        const userData = { emailAddress: user.emailAddress, userCode: user.userCode, userName: user.userName, balance: user.balance, avatarURL: user.avatarURL };
+        if (betInfo) {
+            totalBet = betInfo.totalBet;
+            totalWin = betInfo.totalWin;
+            unlockedBalance = betInfo.unlockedBalance;
+        }
+
+        const userData = { 
+            emailAddress: user.emailAddress, 
+            userCode: user.userCode, 
+            userName: user.userName, 
+            balance: user.balance, 
+            lockedBalance: user.lockedBalance, 
+            totalBet, 
+            totalWin,
+            unlockedBalance,
+            avatarURL: user.avatarURL 
+        };
 
         return res.json(eot({ status: 1, msg: 'Access granted', userData }));
     } catch (error) {
