@@ -105,7 +105,8 @@ exports.login = async (req, res) => {
             totalWin = betInfo.totalWin;
             unlockedBalance = betInfo.unlockedBalance;
         }
-        const userData = { 
+        const userData = {
+            id: user.id,
             emailAddress: user.emailAddress, 
             userCode: user.userCode, 
             userName: user.userName, 
@@ -151,7 +152,8 @@ exports.checkSession = async (req, res) => {
             unlockedBalance = betInfo.unlockedBalance;
         }
 
-        const userData = { 
+        const userData = {
+            id: user.id,
             emailAddress: user.emailAddress, 
             userCode: user.userCode, 
             userName: user.userName, 
@@ -232,6 +234,39 @@ exports.userStatusChange = async (req, res) => {
         const { id, status } = dot(req.body);
 
         const user = await User.update({status}, {where: {id}})
+
+        return res.json(eot({
+            status: 1,
+            msg: "success"
+        }));
+    } catch (error) {
+        return errorHandler(res, error);
+    }
+};
+
+exports.onGetBonus = async (req, res) => {
+    try {
+        const { id, amount } = dot(req.body);
+
+        const user = await User.findOne({where: {id}});
+        const betInfo = await UserBetInfo.findOne({where: {userId: id}});
+
+        if (amount > betInfo.unlockedBalance) {
+            return res.json(eot({
+                status: 2,
+                msg: "You already got bonus!",
+            }));
+        }
+
+        if (!user || !betInfo) {
+            return res.json(eot({
+                status: 0,
+                msg: "Invalid User"
+            }));
+        }
+
+        await User.update({balance: user.balance + amount}, {where: { id }});
+        await UserBetInfo.update({unlockedBalance: 0}, {where: { id: betInfo.id }});
 
         return res.json(eot({
             status: 1,

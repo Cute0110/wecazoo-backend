@@ -45,6 +45,7 @@ router.post("/live_game_launch", authenticate, apiController.apiLiveGameLaunch);
 
 router.post("/createInvoice", authenticate, paymentController.createInvoice);
 router.post("/withdraw", authenticate, paymentController.withdraw);
+router.post("/get_bonus", authenticate, userController.onGetBonus);
 
 //Admin actions
 //influencers
