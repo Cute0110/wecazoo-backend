@@ -23,6 +23,13 @@ var authenticate = async (req, res, next) => {
             if (!user) {
                 return res.status(401).json(eot({ status: 0, msg: 'Invalid or expired token' }));
             }
+
+            if (user.status == 0) {
+                return res.json(eot({
+                    status: 0,
+                    msg: "You were blocked by admin!",
+                }))
+            }
             return next();
         } catch (err) {
             return res.status(401).json(eot({ status: 0, msg: 'Invalid or expired token' }));

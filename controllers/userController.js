@@ -86,6 +86,13 @@ exports.login = async (req, res) => {
             }))
         }
 
+        if (user.status == 0) {
+            return res.json(eot({
+                status: 0,
+                msg: "You were blocked by admin!",
+            }))
+        }
+
         const result = await bcrypt.compare(password, user.password);
         if (!result) {
             return res.json(eot({
@@ -139,6 +146,12 @@ exports.checkSession = async (req, res) => {
 
         if (!user) {
             return res.json(eot({ status: 0, msg: 'Invalid or expired token' }));
+        }
+        if (user.status == 0) {
+            return res.json(eot({
+                status: 0,
+                msg: "You were blocked by admin!",
+            }))
         }
         const betInfo = await UserBetInfo.findOne({ where: { userId: decoded.userId}});
 
