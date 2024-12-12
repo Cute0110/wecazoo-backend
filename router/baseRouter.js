@@ -4,6 +4,7 @@ const config = require("../config/main");
 
 // controllers
 const userController = require("../controllers/userController");
+const influencerController = require("../controllers/influencerController");
 const apiController = require("../controllers/apiController");
 const paymentController = require("../controllers/paymentController");
 const { authenticate, adminAuthenticate } = require("../middleware/authMiddleware");
@@ -42,12 +43,21 @@ router.post("/game_list", authenticate, apiController.apiGetGameList);
 router.post("/slot_game_launch", authenticate, apiController.apiSlotGameLaunch);
 router.post("/live_game_launch", authenticate, apiController.apiLiveGameLaunch);
 
+router.post("/createInvoice", authenticate, paymentController.createInvoice);
+router.post("/withdraw", authenticate, paymentController.withdraw);
+
+//Admin actions
+//influencers
+router.post("/get_all_influencers", adminAuthenticate, influencerController.getAllInfluencers);
+router.post("/influencer_create", adminAuthenticate, influencerController.onCreate);
+router.post("/influencer_delete", adminAuthenticate, influencerController.onDelete);
+router.post("/influencer_status_change", adminAuthenticate, influencerController.onStatusChange);
+router.post("/influencer_transaction", adminAuthenticate, influencerController.onTransaction);
+
+//users
 router.post("/get_all_users", adminAuthenticate, userController.getAllUsers);
 router.post("/user_transaction", adminAuthenticate, userController.userTransaction);
 router.post("/user_delete", adminAuthenticate, userController.userDelete);
 router.post("/user_status_change", adminAuthenticate, userController.userStatusChange);
-
-router.post("/createInvoice", authenticate, paymentController.createInvoice);
-router.post("/withdraw", authenticate, paymentController.withdraw);
 
 module.exports = router;

@@ -19,6 +19,7 @@ db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
 // model
+db.influencer = require("./influencerModel")(sequelize, Sequelize);
 db.user = require("./userModel")(sequelize, Sequelize);
 db.userBalanceHistory = require("./userBalanceHistoryModel")(sequelize, Sequelize);
 db.userGameHistory = require("./userGameHistoryModel")(sequelize, Sequelize);

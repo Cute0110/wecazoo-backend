@@ -7,6 +7,10 @@ module.exports = (sequelize, Sequelize) => {
                 primaryKey: true,
                 autoIncrement: true,
             },
+            influencerId: {
+                type: Sequelize.INTEGER,
+                defaultValue: 0,
+            },
             userCode: {
                 type: Sequelize.STRING,
                 defaultValue: "",
@@ -56,6 +60,10 @@ module.exports = (sequelize, Sequelize) => {
             timestamps: true,
         }
     );
+    
+    User.associate = (db) => {
+        User.belongsTo(db.User, { foreignKey: "userId", sourceKey: "id", as: "influencer" });
+    };
 
     return User;
 };
