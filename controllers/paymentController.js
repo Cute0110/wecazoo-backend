@@ -2,6 +2,7 @@ const Joi = require("joi");
 const db = require("../models");
 const User = db.user;
 const UserBalanceHistory = db.userBalanceHistory;
+const Influencer = db.influencer;
 const { errorHandler, validateSchema } = require("../utils/helper");
 const { createInvoice } = require("../utils/cryptoPayment");
 const { eot, dot } = require('../utils/cryptoUtils');
@@ -101,6 +102,7 @@ exports.withdraw = async (req, res) => {
 exports.handleDepositCallback = async (req, res) => {
     try {
 
+        const { payment_status, actually_paid, price_amount, outcome_amount, order_id } = req.body;
         const rawBody = JSON.stringify(req.body);
 
         // Generate the HMAC SHA-512 signature
@@ -117,11 +119,11 @@ exports.handleDepositCallback = async (req, res) => {
             console.log('Signature is valid.');
             // Process the callback
         } else {
+            await UserBalanceHistory.update({ sentAmount: 0, receivedAmount: 0, status: "Failed" }, { where: { id: order_id } })
             console.error('Invalid signature.');
             return errorHandler(res, "Invalid signature.");
             // Handle the invalid signature case
         }
-        const { payment_status, actually_paid, price_amount, outcome_amount, order_id } = req.body;
 
         const ubh = await UserBalanceHistory.findOne({ where: { id: order_id } });
 
@@ -139,23 +141,21 @@ exports.handleDepositCallback = async (req, res) => {
             }))
         }
 
+        const influencer = await Influencer.findOne({where: {id: user.influencerId}});
+        let percentBonus = config.noCodeUserBonusPercent;
+
+        if (influencer) {
+            percentBonus = config.hasCodeUserBonusPercent;
+        }
+
         const newBalance = user.balance + outcome_amount;
-        let lockedBalance = 0;
+        const newLockedBalance = user.lockedBalance + (outcome_amount * percentBonus / 100);
 
         console.log("Deposit Info : ", req.body);
         // Handle the payment status
         switch (payment_status) {
             case 'finished':
-                if (outcome_amount >= 100) {
-                    lockedBalance = outcome_amount / 2;
-                } else if (outcome_amount >= 50) {
-                    lockedBalance = outcome_amount / 3;
-                } else if (outcome_amount >= 20) {
-                    lockedBalance = outcome_amount / 4;
-                } else {
-                    lockedBalance = outcome_amount / 5;
-                }
-                await User.update({ balance: newBalance, lockedBalance }, { where: { id: user.id } });
+                await User.update({ balance: newBalance, lockedBalance: newLockedBalance }, { where: { id: user.id } });
                 await UserBalanceHistory.update({ userAfterBalance: newBalance, sentAmount: actually_paid, receivedAmount: outcome_amount, status: "Success" }, { where: { id: ubh.id } })
                 break;
             case 'failed':
@@ -163,16 +163,7 @@ exports.handleDepositCallback = async (req, res) => {
                 // Payment failed
                 break;
             case 'partially_paid':
-                if (outcome_amount >= 100) {
-                    lockedBalance = outcome_amount / 2;
-                } else if (outcome_amount >= 50) {
-                    lockedBalance = outcome_amount / 3;
-                } else if (outcome_amount >= 20) {
-                    lockedBalance = outcome_amount / 4;
-                } else {
-                    lockedBalance = outcome_amount / 5;
-                }
-                await User.update({ balance: newBalance, lockedBalance }, { where: { id: user.id } });
+                await User.update({ balance: newBalance, lockedBalance: newLockedBalance }, { where: { id: user.id } });
                 await UserBalanceHistory.update({ userAfterBalance: newBalance, sentAmount: actually_paid, receivedAmount: outcome_amount, status: "Success" }, { where: { id: ubh.id } })
                 // Handle partial payment
                 break;

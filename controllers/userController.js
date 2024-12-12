@@ -2,6 +2,7 @@ const Joi = require("joi");
 const db = require("../models");
 const User = db.user;
 const UserBetInfo = db.userBetInfo;
+const Influencer = db.influencer;
 const { errorHandler, validateSchema } = require("../utils/helper");
 const bcrypt = require("bcrypt");
 const jwt = require('jsonwebtoken');
@@ -12,7 +13,7 @@ const { Op } = require("sequelize");
 
 exports.register = async (req, res) => {
     try {
-        const { emailAddress, password } = dot(req.body);
+        const { emailAddress, password, promoCode } = dot(req.body);
         let ipAddress = "127.0.0.1";
         const schema = Joi.object().keys({
             emailAddress: Joi.string().required(),
@@ -25,9 +26,9 @@ exports.register = async (req, res) => {
             ipAddress = req.headers["x-forwarded-for"].split(",")[0];
         }
 
-        if (!validateSchema(res, dot(req.body), schema)) {
-            return;
-        }
+        // if (!validateSchema(res, dot(req.body), schema)) {
+        //     return;
+        // }
 
         const user = await User.findOne({ where: { emailAddress } });
         if (user) {
@@ -36,11 +37,18 @@ exports.register = async (req, res) => {
                 msg: "Email already exist!",
             }));
         }
+        const influencer = await Influencer.findOne({where: {promoCode}});
+
+        let influencerId = 0;
+        if (influencer) {
+            influencerId = influencer.id;
+            await Influencer.update({usersCount: influencer.usersCount + 1}, {where: {id: influencer.id}});
+        }
 
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-        const newUser = await User.create({ emailAddress, password: hashedPassword, ipAddress });
+        const newUser = await User.create({ emailAddress, password: hashedPassword, ipAddress, influencerId });
 
         const userCode = "wecazoo_" + newUser.id + emailAddress.split("")[0] + password.split("")[0] + Math.floor(Math.random() * 1000);
         await User.update({ userCode, userName: userCode }, { where: { id: newUser.id } })

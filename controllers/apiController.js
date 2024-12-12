@@ -4,6 +4,7 @@ const { eot, dot } = require('../utils/cryptoUtils');
 const db = require("../models");
 const User = db.user;
 const UserBetInfo = db.userBetInfo;
+const Influencer = db.influencer;
 const UserGameHistory = db.userGameHistory;
 
 // exports.createApiUser = async (userCode) => {
@@ -163,6 +164,7 @@ exports.handleApiRequest = async (req, res) => {
         const { method, user_code, agent_code }= req.body;
         const user = await User.findOne({ where: { userCode: user_code } });
         const betInfo = await UserBetInfo.findOne( { where: {userId: user.id}});
+        const influencer = await Influencer.findOne({ where: {id: user.influencerId}});
 
         switch (method) {
             case 'user_balance':
@@ -203,6 +205,10 @@ exports.handleApiRequest = async (req, res) => {
                         game_code 
                     });
 
+                    if (influencer) {
+                        await Influencer.update({usersTotalBet: (influencer.usersTotalBet + bet_money), profit: (influencer.profit + bet_money * config.influencerBonusPercent / 100)}, {where: {id: influencer.id}})
+                    }
+
                     return res.json({
                         "status": 1,
                         "user_balance": newBalance,
@@ -228,6 +234,10 @@ exports.handleApiRequest = async (req, res) => {
                         provider_code, 
                         game_code 
                     });
+
+                    if (influencer) {
+                        await Influencer.update({usersTotalBet: (influencer.usersTotalBet + bet_money), profit: (influencer.profit + bet_money * config.influencerBonusPercent / 100)}, {where: {id: influencer.id}})
+                    }
 
                     return res.json({
                         "status": 1,
