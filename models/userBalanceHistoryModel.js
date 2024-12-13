@@ -46,7 +46,7 @@ module.exports = (sequelize, Sequelize) => {
     );
 
     UserBalanceHistory.associate = (db) => {
-        UserBalanceHistory.belongsTo(db.User, { foreignKey: "userId", sourceKey: "id", as: "user" });
+        UserBalanceHistory.belongsTo(db.user, { foreignKey: "userId", sourceKey: "id", as: "user" });
     };
 
     return UserBalanceHistory;

@@ -62,7 +62,7 @@ module.exports = (sequelize, Sequelize) => {
     );
     
     User.associate = (db) => {
-        User.belongsTo(db.User, { foreignKey: "userId", sourceKey: "id", as: "influencer" });
+        User.belongsTo(db.influencer, { foreignKey: "influencerId", as: "influencer" });
     };
 
     return User;

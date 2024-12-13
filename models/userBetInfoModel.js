@@ -30,7 +30,7 @@ module.exports = (sequelize, Sequelize) => {
     );
 
     UserBetInfo.associate = (db) => {
-        UserBetInfo.belongsTo(db.User, { foreignKey: "userId", sourceKey: "id", as: "user" });
+        UserBetInfo.belongsTo(db.user, { foreignKey: "userId", sourceKey: "id", as: "user" });
     };
 
     return UserBetInfo;

@@ -58,7 +58,7 @@ module.exports = (sequelize, Sequelize) => {
     );
 
     UserGameHistory.associate = (db) => {
-        UserGameHistory.belongsTo(db.User, { foreignKey: "userId", sourceKey: "id", as: "user" });
+        UserGameHistory.belongsTo(db.user, { foreignKey: "userId", sourceKey: "id", as: "user" });
     };
 
     return UserGameHistory;

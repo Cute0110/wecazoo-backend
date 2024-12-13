@@ -5,6 +5,7 @@ const config = require("../config/main");
 // controllers
 const userController = require("../controllers/userController");
 const influencerController = require("../controllers/influencerController");
+const providerController = require("../controllers/providerController");
 const apiController = require("../controllers/apiController");
 const paymentController = require("../controllers/paymentController");
 const { authenticate, adminAuthenticate } = require("../middleware/authMiddleware");
@@ -54,6 +55,12 @@ router.post("/influencer_create", adminAuthenticate, influencerController.onCrea
 router.post("/influencer_delete", adminAuthenticate, influencerController.onDelete);
 router.post("/influencer_status_change", adminAuthenticate, influencerController.onStatusChange);
 router.post("/influencer_transaction", adminAuthenticate, influencerController.onTransaction);
+
+//providers
+
+router.post("/get_all_providers", adminAuthenticate, providerController.getAllProviders);
+router.post("/provider_status_change", adminAuthenticate, providerController.onStatusChange);
+router.post("/provider_original_status_change", adminAuthenticate, providerController.onOriginalStatusChange);
 
 //users
 router.post("/get_all_users", adminAuthenticate, userController.getAllUsers);

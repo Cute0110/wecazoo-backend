@@ -24,9 +24,16 @@ db.user = require("./userModel")(sequelize, Sequelize);
 db.userBalanceHistory = require("./userBalanceHistoryModel")(sequelize, Sequelize);
 db.userGameHistory = require("./userGameHistoryModel")(sequelize, Sequelize);
 db.userBetInfo = require("./userBetInfoModel")(sequelize, Sequelize);
+db.provider = require("./providerModel")(sequelize, Sequelize);
 
 db.sync = async () => {
     await db.sequelize.sync();
+
+    Object.keys(db).forEach((modelName) => {
+        if (db[modelName].associate) {
+            db[modelName].associate(db);
+        }
+    });
 
     console.log(`Database connected.`);
 };
