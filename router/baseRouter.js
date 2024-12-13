@@ -68,4 +68,8 @@ router.post("/user_transaction", adminAuthenticate, userController.userTransacti
 router.post("/user_delete", adminAuthenticate, userController.userDelete);
 router.post("/user_status_change", adminAuthenticate, userController.userStatusChange);
 
+//transactions
+
+router.post("/get_deposit_histories", adminAuthenticate, paymentController.getAllDepositHistory);
+
 module.exports = router;

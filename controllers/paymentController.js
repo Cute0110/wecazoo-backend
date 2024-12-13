@@ -24,18 +24,18 @@ exports.createInvoice = async (req, res) => {
         const { price, currency } = dot(req.body);
 
         const authHeader = req.headers.authorization;
-        if (!authHeader) return res.json(eot({status: 0, msg: 'No token provided' }));
+        if (!authHeader) return res.json(eot({ status: 0, msg: 'No token provided' }));
 
         const token = authHeader;
         const decoded = jwt.verify(token, config.SECRET_KEY);
 
-        const user = await User.findOne({where : {id: decoded.userId}});
+        const user = await User.findOne({ where: { id: decoded.userId } });
 
         if (!user) {
-            return res.json(eot({status: 0, msg: 'Invalid user!' }));
+            return res.json(eot({ status: 0, msg: 'Invalid user!' }));
         }
 
-        const newUserBalanceHistory = await UserBalanceHistory.create({ userId: decoded.userId, userPrevBalance: user.balance, userAfterBalance: user.balance , type: "Deposit", status: "Pending" });
+        const newUserBalanceHistory = await UserBalanceHistory.create({ userId: decoded.userId, userPrevBalance: user.balance, userAfterBalance: user.balance, type: "Deposit", status: "Waiting" });
 
         const invoiceData = {
             price,
@@ -67,14 +67,14 @@ exports.withdraw = async (req, res) => {
 
         const { amount, address } = dot(req.body);
         const authHeader = req.headers.authorization;
-        if (!authHeader) return res.json(eot({status: 0, msg: 'No token provided' }));
+        if (!authHeader) return res.json(eot({ status: 0, msg: 'No token provided' }));
 
         const token = authHeader;
         const decoded = jwt.verify(token, config.SECRET_KEY);
         const user = await User.findOne({ where: { id: decoded.userId } });
 
         if (!user) {
-            return res.json(eot({status: 0, msg: 'Invalid user!' }));
+            return res.json(eot({ status: 0, msg: 'Invalid user!' }));
         }
 
         if (user.balance < amount) {
@@ -86,7 +86,7 @@ exports.withdraw = async (req, res) => {
 
         const newBalance = user.balance - amount;
 
-        await UserBalanceHistory.create({ userId: decoded.userId, userPrevBalance: user.balance, userAfterBalance: newBalance, amount: amount, type: "Withdraw", address: address, status: "Pending" });
+        await UserBalanceHistory.create({ userId: decoded.userId, userPrevBalance: user.balance, userAfterBalance: newBalance, sentAmount: amount, type: "Withdraw", address: address, status: "Pending" });
         await User.update({ balance: newBalance }, { where: { id: user.id } });
         return res.json(eot({
             status: 1,
@@ -98,11 +98,57 @@ exports.withdraw = async (req, res) => {
     }
 }
 
+exports.getAllDepositHistory = async (req, res) => {
+    try {
+        const { start, length, search, order, dir } = dot(req.body);
+
+        let query = {};
+
+        if (search && search.trim() !== "") {
+            query = {
+                [Op.or]: [
+                    { name: { [Op.substring]: search } },
+                    { promoCode: { [Op.substring]: search } }
+                ],
+            };
+        }
+
+        query = {
+            ...query,
+            type: "Deposit",
+        }
+
+        const data = await UserBalanceHistory.findAndCountAll({
+            include: [{
+                model: User,
+                as: "user",
+                attributes: ['id', 'userCode', 'userName', 'emailAddress'],
+            }],
+            where: query,
+            offset: Number(start),
+            limit: Number(length),
+            order: [
+                [order, dir],
+            ],
+        });
+
+        return res.json(eot({
+            status: 1,
+            data: data.rows,
+            length: Number(length),
+            start: Number(start),
+            totalCount: data.count,
+        }));
+    } catch (error) {
+        return errorHandler(res, error);
+    }
+};
+
 // IPN Handler
 exports.handleDepositCallback = async (req, res) => {
     try {
 
-        const { payment_status, actually_paid, price_amount, outcome_amount, order_id } = req.body;
+        const { payment_status, actually_paid, price_amount, outcome_amount, order_id, pay_amount } = req.body;
         const rawBody = JSON.stringify(req.body);
 
         // Generate the HMAC SHA-512 signature
@@ -141,7 +187,7 @@ exports.handleDepositCallback = async (req, res) => {
             }))
         }
 
-        const influencer = await Influencer.findOne({where: {id: user.influencerId}});
+        const influencer = await Influencer.findOne({ where: { id: user.influencerId } });
         let percentBonus = config.noCodeUserBonusPercent;
 
         if (influencer) {
@@ -149,22 +195,34 @@ exports.handleDepositCallback = async (req, res) => {
         }
 
         const newBalance = user.balance + outcome_amount;
-        const newLockedBalance = user.lockedBalance + (outcome_amount * percentBonus / 100);
+        let newLockedBalance = 0;
+        if (outcome_amount >= 15 && user.lockedBalance == 0) {
+            newLockedBalance = 200;
+        } else {
+            newLockedBalance = user.lockedBalance + (outcome_amount * percentBonus / 100);
+        }
 
+        console.log("*********", payment_status, "**********");
         console.log("Deposit Info : ", req.body);
         // Handle the payment status
         switch (payment_status) {
+            case 'confirmed':
+                await UserBalanceHistory.update({ sentAmount: actually_paid, receivedAmount: outcome_amount, status: "Confirmed" }, { where: { id: ubh.id } })
+                break;
+            case 'expired':
+                await UserBalanceHistory.update({ sentAmount: pay_amount, receivedAmount: 0, status: "Expired" }, { where: { id: ubh.id } })
+                break;
             case 'finished':
                 await User.update({ balance: newBalance, lockedBalance: newLockedBalance }, { where: { id: user.id } });
-                await UserBalanceHistory.update({ userAfterBalance: newBalance, sentAmount: actually_paid, receivedAmount: outcome_amount, status: "Success" }, { where: { id: ubh.id } })
+                await UserBalanceHistory.update({ userAfterBalance: newBalance, sentAmount: actually_paid, receivedAmount: outcome_amount, status: "Finished" }, { where: { id: ubh.id } })
                 break;
             case 'failed':
-                await UserBalanceHistory.update({ amount: price_amount, status: "Failed" }, { where: { id: ubh.id } })
+                await UserBalanceHistory.update({ sentAmount: price_amount, status: "Failed" }, { where: { id: ubh.id } })
                 // Payment failed
                 break;
             case 'partially_paid':
                 await User.update({ balance: newBalance, lockedBalance: newLockedBalance }, { where: { id: user.id } });
-                await UserBalanceHistory.update({ userAfterBalance: newBalance, sentAmount: actually_paid, receivedAmount: outcome_amount, status: "Success" }, { where: { id: ubh.id } })
+                await UserBalanceHistory.update({ userAfterBalance: newBalance, sentAmount: actually_paid, receivedAmount: outcome_amount, status: "Finished" }, { where: { id: ubh.id } })
                 // Handle partial payment
                 break;
         }

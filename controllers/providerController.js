@@ -9,8 +9,6 @@ exports.getAllProviders = async (req, res) => {
     try {
         const { start, length, search, order, dir } = dot(req.body);
 
-        console.log(order, dir);
-
         let query = {};
 
         if (search && search.trim() !== "") {
