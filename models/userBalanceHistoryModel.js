@@ -35,6 +35,10 @@ module.exports = (sequelize, Sequelize) => {
                 type: Sequelize.STRING,
                 defaultValue: "",
             },
+            asset: {
+                type: Sequelize.STRING,
+                defaultValue: "",
+            },
             status: {
                 type: Sequelize.STRING,
                 defaultValue: "",

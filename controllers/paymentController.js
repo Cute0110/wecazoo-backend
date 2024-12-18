@@ -35,7 +35,7 @@ exports.createInvoice = async (req, res) => {
             return res.json(eot({ status: 0, msg: 'Invalid user!' }));
         }
 
-        const newUserBalanceHistory = await UserBalanceHistory.create({ userId: decoded.userId, userPrevBalance: user.balance, userAfterBalance: user.balance, type: "Deposit", status: "Waiting" });
+        const newUserBalanceHistory = await UserBalanceHistory.create({ userId: decoded.userId, userPrevBalance: user.balance, userAfterBalance: user.balance, sentAmount: price, type: "Deposit", status: "Waiting" });
 
         const invoiceData = {
             price,
@@ -59,13 +59,14 @@ exports.withdraw = async (req, res) => {
         const schema = Joi.object({
             amount: Joi.number().required(),
             address: Joi.string().required(),
+            asset: Joi.string().required(),
         });
 
         if (!validateSchema(res, dot(req.body), schema)) {
             return;
         }
+        const { amount, address, asset } = dot(req.body);
 
-        const { amount, address } = dot(req.body);
         const authHeader = req.headers.authorization;
         if (!authHeader) return res.json(eot({ status: 0, msg: 'No token provided' }));
 
@@ -86,7 +87,7 @@ exports.withdraw = async (req, res) => {
 
         const newBalance = user.balance - amount;
 
-        await UserBalanceHistory.create({ userId: decoded.userId, userPrevBalance: user.balance, userAfterBalance: newBalance, sentAmount: amount, type: "Withdraw", address: address, status: "Pending" });
+        await UserBalanceHistory.create({ userId: decoded.userId, userPrevBalance: user.balance, userAfterBalance: newBalance, sentAmount: amount, type: "Withdraw", address, asset, status: "Waiting" });
         await User.update({ balance: newBalance }, { where: { id: user.id } });
         return res.json(eot({
             status: 1,
@@ -138,6 +139,75 @@ exports.getAllDepositHistory = async (req, res) => {
             length: Number(length),
             start: Number(start),
             totalCount: data.count,
+        }));
+    } catch (error) {
+        return errorHandler(res, error);
+    }
+};
+
+exports.getAllWithdrawHistory = async (req, res) => {
+    try {
+        const { start, length, search, order, dir } = dot(req.body);
+
+        let query = {};
+
+        if (search && search.trim() !== "") {
+            query = {
+                [Op.or]: [
+                    { name: { [Op.substring]: search } },
+                    { promoCode: { [Op.substring]: search } }
+                ],
+            };
+        }
+
+        query = {
+            ...query,
+            type: "Withdraw",
+        }
+
+        const data = await UserBalanceHistory.findAndCountAll({
+            include: [{
+                model: User,
+                as: "user",
+                attributes: ['id', 'userCode', 'userName', 'emailAddress'],
+            }],
+            where: query,
+            offset: Number(start),
+            limit: Number(length),
+            order: [
+                [order, dir],
+            ],
+        });
+
+        return res.json(eot({
+            status: 1,
+            data: data.rows,
+            length: Number(length),
+            start: Number(start),
+            totalCount: data.count,
+        }));
+    } catch (error) {
+        return errorHandler(res, error);
+    }
+};
+
+
+exports.onWithdrawConfirm = async (req, res) => {
+    try {
+        const { id } = dot(req.body);
+
+        const ubh = await UserBalanceHistory.update({status: "Paid"}, {where: { id }});
+
+        if (!ubh) {
+            return res.json(eot({
+                status: 0,
+                msg: "Invalid withdraw ID"
+            }));
+        }
+
+        return res.json(eot({
+            status: 1,
+            msg: "Success"
         }));
     } catch (error) {
         return errorHandler(res, error);

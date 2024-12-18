@@ -71,5 +71,7 @@ router.post("/user_status_change", adminAuthenticate, userController.userStatusC
 //transactions
 
 router.post("/get_deposit_histories", adminAuthenticate, paymentController.getAllDepositHistory);
+router.post("/get_withdraw_histories", adminAuthenticate, paymentController.getAllWithdrawHistory);
+router.post("/withdraw_confirm", adminAuthenticate, paymentController.onWithdrawConfirm);
 
 module.exports = router;

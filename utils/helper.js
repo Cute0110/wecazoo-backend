@@ -22,7 +22,7 @@ exports.validateSchema = (res, input, schema) => {
     if (result.error) {
         console.error(result.error);
 
-        res.status(400).json(eot({
+        res.json(eot({
             status: 0,
             msg: "Validation Error",
         }));
