@@ -5,7 +5,7 @@ const config = require("../config/main");
 // controllers
 const userController = require("../controllers/userController");
 const influencerController = require("../controllers/influencerController");
-const providerController = require("../controllers/providerController");
+const gameController = require("../controllers/gameController");
 const apiController = require("../controllers/apiController");
 const paymentController = require("../controllers/paymentController");
 const { authenticate, adminAuthenticate } = require("../middleware/authMiddleware");
@@ -39,10 +39,8 @@ router.get("/admin_check_session",adminAuthenticate, userController.checkSession
 
 router.post("/depositPaymentCallback", paymentController.handleDepositCallback);
 
-router.post("/provider_list", apiController.apiGetProviderList);
-router.post("/game_list", authenticate, apiController.apiGetGameList);
-router.post("/slot_game_launch", authenticate, apiController.apiSlotGameLaunch);
-router.post("/live_game_launch", authenticate, apiController.apiLiveGameLaunch);
+// router.post("/slot_game_launch", authenticate, apiController.apiSlotGameLaunch);
+// router.post("/live_game_launch", authenticate, apiController.apiLiveGameLaunch);
 
 router.post("/createInvoice", authenticate, paymentController.createInvoice);
 router.post("/withdraw", authenticate, paymentController.withdraw);
@@ -56,11 +54,11 @@ router.post("/influencer_delete", adminAuthenticate, influencerController.onDele
 router.post("/influencer_status_change", adminAuthenticate, influencerController.onStatusChange);
 router.post("/influencer_transaction", adminAuthenticate, influencerController.onTransaction);
 
-//providers
-
-router.post("/get_all_providers", adminAuthenticate, providerController.getAllProviders);
-router.post("/provider_status_change", adminAuthenticate, providerController.onStatusChange);
-router.post("/provider_original_status_change", adminAuthenticate, providerController.onOriginalStatusChange);
+//Games
+router.post("/game_list", gameController.getAllGames);
+router.post("/game_launch", authenticate, gameController.onGameLaunch)
+router.post("/provider_status_change", adminAuthenticate, gameController.onStatusChange);
+router.post("/provider_original_status_change", adminAuthenticate, gameController.onOriginalStatusChange);
 
 //users
 router.post("/get_all_users", adminAuthenticate, userController.getAllUsers);

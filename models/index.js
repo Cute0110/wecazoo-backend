@@ -24,7 +24,7 @@ db.user = require("./userModel")(sequelize, Sequelize);
 db.userBalanceHistory = require("./userBalanceHistoryModel")(sequelize, Sequelize);
 db.userGameHistory = require("./userGameHistoryModel")(sequelize, Sequelize);
 db.userBetInfo = require("./userBetInfoModel")(sequelize, Sequelize);
-db.provider = require("./providerModel")(sequelize, Sequelize);
+db.game = require("./gameModel")(sequelize, Sequelize);
 
 db.sync = async () => {
     await db.sequelize.sync();
