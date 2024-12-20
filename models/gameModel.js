@@ -55,6 +55,10 @@ module.exports = (sequelize, Sequelize) => {
                 type: Sequelize.BOOLEAN,
                 defaultValue: false,
             },
+            isEntertaining: {
+                type: Sequelize.BOOLEAN,
+                defaultValue: false,
+            },
             status: {
                 type: Sequelize.BOOLEAN,
                 defaultValue: true,
