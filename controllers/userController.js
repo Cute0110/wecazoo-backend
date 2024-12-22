@@ -3,6 +3,7 @@ const db = require("../models");
 const User = db.user;
 const UserBetInfo = db.userBetInfo;
 const Influencer = db.influencer;
+const UserBalanceHistory = db.userBalanceHistory;
 const { errorHandler, validateSchema } = require("../utils/helper");
 const bcrypt = require("bcrypt");
 const jwt = require('jsonwebtoken');
@@ -231,8 +232,19 @@ exports.userTransaction = async (req, res) => {
     try {
         const { id, newBalance, amount, chargeType } = dot(req.body);
 
+        const userPrevBalance = (chargeType == 0 ? newBalance + amount : newBalance - amount);
+
         const user = await User.update({balance: newBalance}, {where: {id}})
 
+        await UserBalanceHistory.create({
+            userId: id, type: chargeType == 0 ? "Manager | WithDraw" : "Manager | Deposit", 
+            userPrevBalance, 
+            userAfterBalance: newBalance, 
+            sentAmount: amount, 
+            receivedAmount: amount, 
+            status: "Finished" 
+        });
+        
         return res.json(eot({
             status: 1,
             msg: "success"

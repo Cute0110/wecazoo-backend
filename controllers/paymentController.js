@@ -8,6 +8,7 @@ const { createInvoice } = require("../utils/cryptoPayment");
 const { eot, dot } = require('../utils/cryptoUtils');
 const config = require('../config/main');
 const jwt = require('jsonwebtoken');
+const { Op } = require("sequelize");
 const crypto = require('crypto');
 
 exports.createInvoice = async (req, res) => {
@@ -116,7 +117,7 @@ exports.getAllDepositHistory = async (req, res) => {
 
         query = {
             ...query,
-            type: "Deposit",
+            type: { [Op.substring]: "Deposit" },
         }
 
         const data = await UserBalanceHistory.findAndCountAll({
@@ -162,7 +163,7 @@ exports.getAllWithdrawHistory = async (req, res) => {
 
         query = {
             ...query,
-            type: "Withdraw",
+            type: { [Op.substring]: "Withdraw" },
         }
 
         const data = await UserBalanceHistory.findAndCountAll({
@@ -196,7 +197,7 @@ exports.onWithdrawConfirm = async (req, res) => {
     try {
         const { id } = dot(req.body);
 
-        const ubh = await UserBalanceHistory.update({status: "Paid"}, {where: { id }});
+        const ubh = await UserBalanceHistory.update({status: "Finished"}, {where: { id }});
 
         if (!ubh) {
             return res.json(eot({
