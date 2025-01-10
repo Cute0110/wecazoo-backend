@@ -8,6 +8,7 @@ const influencerController = require("../controllers/influencerController");
 const gameController = require("../controllers/gameController");
 const apiController = require("../controllers/apiController");
 const paymentController = require("../controllers/paymentController");
+const vipController = require("../controllers/vipController");
 const { authenticate, adminAuthenticate } = require("../middleware/authMiddleware");
 
 // const checkIp = async (req, res, next) => {
@@ -35,7 +36,7 @@ router.post("/login", userController.login);
 router.post("/register", userController.register);
 
 router.get("/check_session", userController.checkSession);
-router.get("/admin_check_session",adminAuthenticate, userController.checkSession);
+router.get("/admin_check_session", adminAuthenticate, userController.checkSession);
 
 router.post("/depositPaymentCallback", paymentController.handleDepositCallback);
 
@@ -65,6 +66,18 @@ router.post("/get_all_users", adminAuthenticate, userController.getAllUsers);
 router.post("/user_transaction", adminAuthenticate, userController.userTransaction);
 router.post("/user_delete", adminAuthenticate, userController.userDelete);
 router.post("/user_status_change", adminAuthenticate, userController.userStatusChange);
+
+//vip
+router.get("/vip/status", authenticate, vipController.getUserVipStatus);
+
+// Get all VIP levels
+router.get("/vip/levels", authenticate, vipController.getAllVipLevels);
+
+// Get users by VIP level
+router.post("/vip/users-by-level", authenticate, vipController.getUsersByVipLevel);
+
+// Update user's VIP status (when they place a bet)
+router.post("/vip/update-status", authenticate, vipController.updateUserVipStatus);
 
 //transactions
 

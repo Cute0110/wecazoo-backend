@@ -9,7 +9,8 @@ const baseRouter = require("./router/baseRouter");
 const apiRouter = require("./router/apiRouter");
 const config = require("./config/main");
 
-app.use(cors({ origin: "https://wecazoo.com", credentials: true }));
+// app.use(cors({ origin: "https://wecazoo.com", credentials: true }));
+app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 

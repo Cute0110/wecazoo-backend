@@ -38,12 +38,12 @@ exports.register = async (req, res) => {
                 msg: "Email already exist!",
             }));
         }
-        const influencer = await Influencer.findOne({where: {promoCode}});
+        const influencer = await Influencer.findOne({ where: { promoCode } });
 
         let influencerId = 0;
         if (influencer) {
             influencerId = influencer.id;
-            await Influencer.update({usersCount: influencer.usersCount + 1}, {where: {id: influencer.id}});
+            await Influencer.update({ usersCount: influencer.usersCount + 1 }, { where: { id: influencer.id } });
         }
 
         const saltRounds = 10;
@@ -54,7 +54,7 @@ exports.register = async (req, res) => {
         const userCode = "wecazoo_" + newUser.id + emailAddress.split("")[0] + password.split("")[0] + Math.floor(Math.random() * 1000);
         await User.update({ userCode, userName: userCode }, { where: { id: newUser.id } })
 
-        await UserBetInfo.create({ userId: newUser.id});
+        await UserBetInfo.create({ userId: newUser.id });
 
         // const nexusUser = await apiController.createApiUser(userCode);
 
@@ -102,7 +102,7 @@ exports.login = async (req, res) => {
             }));
         }
 
-        const betInfo = await UserBetInfo.findOne({ where: { userId: user.id}});
+        const betInfo = await UserBetInfo.findOne({ where: { userId: user.id } });
 
         let totalBet = 0;
         let totalWin = 0;
@@ -115,15 +115,15 @@ exports.login = async (req, res) => {
         }
         const userData = {
             id: user.id,
-            emailAddress: user.emailAddress, 
-            userCode: user.userCode, 
-            userName: user.userName, 
-            balance: user.balance, 
-            lockedBalance: user.lockedBalance, 
-            totalBet, 
+            emailAddress: user.emailAddress,
+            userCode: user.userCode,
+            userName: user.userName,
+            balance: user.balance,
+            lockedBalance: user.lockedBalance,
+            totalBet,
             totalWin,
             unlockedBalance,
-            avatarURL: user.avatarURL 
+            avatarURL: user.avatarURL
         };
 
         const token = jwt.sign({ userId: user.id, username: user.username }, config.SECRET_KEY, { expiresIn: '1d' });
@@ -143,7 +143,7 @@ exports.checkSession = async (req, res) => {
         const token = authHeader;
         const decoded = jwt.verify(token, config.SECRET_KEY);
 
-        const user = await User.findOne({ where: { id: decoded.userId } });        
+        const user = await User.findOne({ where: { id: decoded.userId } });
 
         if (!user) {
             return res.json(eot({ status: 0, msg: 'Invalid or expired token' }));
@@ -154,7 +154,7 @@ exports.checkSession = async (req, res) => {
                 msg: "You were blocked by admin!",
             }))
         }
-        const betInfo = await UserBetInfo.findOne({ where: { userId: decoded.userId}});
+        const betInfo = await UserBetInfo.findOne({ where: { userId: decoded.userId } });
 
         let totalBet = 0;
         let totalWin = 0;
@@ -168,15 +168,15 @@ exports.checkSession = async (req, res) => {
 
         const userData = {
             id: user.id,
-            emailAddress: user.emailAddress, 
-            userCode: user.userCode, 
-            userName: user.userName, 
-            balance: user.balance, 
-            lockedBalance: user.lockedBalance, 
-            totalBet, 
+            emailAddress: user.emailAddress,
+            userCode: user.userCode,
+            userName: user.userName,
+            balance: user.balance,
+            lockedBalance: user.lockedBalance,
+            totalBet,
             totalWin,
             unlockedBalance,
-            avatarURL: user.avatarURL 
+            avatarURL: user.avatarURL
         };
 
         return res.json(eot({ status: 1, msg: 'Access granted', userData }));
@@ -234,17 +234,17 @@ exports.userTransaction = async (req, res) => {
 
         const userPrevBalance = (chargeType == 0 ? newBalance + amount : newBalance - amount);
 
-        const user = await User.update({balance: newBalance}, {where: {id}})
+        const user = await User.update({ balance: newBalance }, { where: { id } })
 
         await UserBalanceHistory.create({
-            userId: id, type: chargeType == 0 ? "Manager | WithDraw" : "Manager | Deposit", 
-            userPrevBalance, 
-            userAfterBalance: newBalance, 
-            sentAmount: amount, 
-            receivedAmount: amount, 
-            status: "Finished" 
+            userId: id, type: chargeType == 0 ? "Manager | WithDraw" : "Manager | Deposit",
+            userPrevBalance,
+            userAfterBalance: newBalance,
+            sentAmount: amount,
+            receivedAmount: amount,
+            status: "Finished"
         });
-        
+
         return res.json(eot({
             status: 1,
             msg: "success"
@@ -258,7 +258,7 @@ exports.userStatusChange = async (req, res) => {
     try {
         const { id, status } = dot(req.body);
 
-        const user = await User.update({status}, {where: {id}})
+        const user = await User.update({ status }, { where: { id } })
 
         return res.json(eot({
             status: 1,
@@ -273,8 +273,8 @@ exports.onGetBonus = async (req, res) => {
     try {
         const { id, amount } = dot(req.body);
 
-        const user = await User.findOne({where: {id}});
-        const betInfo = await UserBetInfo.findOne({where: {userId: id}});
+        const user = await User.findOne({ where: { id } });
+        const betInfo = await UserBetInfo.findOne({ where: { userId: id } });
 
         if (amount > betInfo.unlockedBalance) {
             return res.json(eot({
@@ -290,8 +290,8 @@ exports.onGetBonus = async (req, res) => {
             }));
         }
 
-        await User.update({balance: user.balance + amount}, {where: { id }});
-        await UserBetInfo.update({unlockedBalance: 0}, {where: { id: betInfo.id }});
+        await User.update({ balance: user.balance + amount }, { where: { id } });
+        await UserBetInfo.update({ unlockedBalance: 0 }, { where: { id: betInfo.id } });
 
         return res.json(eot({
             status: 1,
@@ -306,7 +306,7 @@ exports.userDelete = async (req, res) => {
     try {
         const { id } = dot(req.body);
 
-        const user = await User.destroy({where: {id}})
+        const user = await User.destroy({ where: { id } })
 
         return res.json(eot({
             status: 1,
