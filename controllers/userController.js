@@ -214,6 +214,13 @@ exports.getAllUsers = async (req, res) => {
             order: [
                 [order, dir],
             ],
+            include: [
+                {
+                    model: db.influencer,
+                    as: 'influencer',
+                    attributes: [['name', 'influencerName']],
+                },
+            ],
         });
 
         return res.json(eot({
