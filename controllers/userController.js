@@ -10,6 +10,7 @@ const jwt = require('jsonwebtoken');
 const config = require("../config/main");
 const apiController = require("./apiController");
 const { eot, dot } = require('../utils/cryptoUtils');
+const Sequelize = require("sequelize");
 const { Op } = require("sequelize");
 
 exports.register = async (req, res) => {
@@ -218,10 +219,19 @@ exports.getAllUsers = async (req, res) => {
                 {
                     model: db.influencer,
                     as: 'influencer',
-                    attributes: [['name', 'influencerName']],
+                    attributes: [],
                 },
             ],
+            attributes: {
+                include: [
+                    [Sequelize.col('influencer.name'), 'influencerName'],
+                ],
+            },
+            raw: true,
+            nest: true,
         });
+
+        console.log(data.rows);
 
         return res.json(eot({
             status: 1,
