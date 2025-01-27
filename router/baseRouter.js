@@ -66,6 +66,7 @@ router.post("/get_all_users", adminAuthenticate, userController.getAllUsers);
 router.post("/user_transaction", adminAuthenticate, userController.userTransaction);
 router.post("/user_delete", adminAuthenticate, userController.userDelete);
 router.post("/user_status_change", adminAuthenticate, userController.userStatusChange);
+router.post("/user_name_change", authenticate, userController.userNameChange);
 
 //vip
 router.get("/vip/status", authenticate, vipController.getUserVipStatus);

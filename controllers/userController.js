@@ -286,6 +286,21 @@ exports.userStatusChange = async (req, res) => {
     }
 };
 
+exports.userNameChange = async (req, res) => {
+    try {
+        const { id, userName } = dot(req.body);
+
+        const user = await User.update({ userName }, { where: { id } })
+
+        return res.json(eot({
+            status: 1,
+            msg: "success"
+        }));
+    } catch (error) {
+        return errorHandler(res, error);
+    }
+};
+
 exports.onGetBonus = async (req, res) => {
     try {
         const { id, amount } = dot(req.body);
