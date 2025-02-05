@@ -1,18 +1,26 @@
 const express = require("express");
 const cors = require("cors");
+const http = require('http');
 const bodyParser = require("body-parser");
 const helmet = require("helmet");
 const crypto = require("crypto");
 require('dotenv').config();
+const { initializeSocket } = require('./socketServer');
 
 const app = express();
+const server = http.createServer(app);
 const database = require("./models");
 const baseRouter = require("./router/baseRouter");
 const apiRouter = require("./router/apiRouter");
 const config = require("./config/main");
 
-app.use(cors({ origin: "https://wecazoo.com", credentials: true }));
-// app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+// CORS configuration
+app.use(cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+}));
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -21,10 +29,8 @@ const generateNonce = () => {
 };
 
 app.use((req, res, next) => {
-    // Generate unique nonce for each request
     const nonce = generateNonce();
 
-    // Apply CSP using helmet
     app.use(
         helmet.contentSecurityPolicy({
             directives: {
@@ -33,34 +39,50 @@ app.use((req, res, next) => {
                 scriptSrc: [
                     "'self'",
                     `'nonce-${nonce}'`,
-                    // Add any other trusted script sources
                 ],
                 styleSrc: ["'self'", "'unsafe-inline'"],
-                connectSrc: ["'self'", "https://*.your-payment-domain.com"],
+                connectSrc: ["'self'",
+                    "http://localhost:3000",
+                    "ws://localhost:5000",
+                    "wss://localhost:5000",
+                    "https://*.your-payment-domain.com"
+                ],
                 imgSrc: ["'self'", "data:", "https:"],
                 fontSrc: ["'self'"],
                 objectSrc: ["'none'"],
                 mediaSrc: ["'self'"],
-                // Add frame-ancestors if needed
                 frameAncestors: ["'self'"],
-                // Add report-uri if you want to collect violation reports
-                // reportUri: '/report-violation',
             },
-            // Set to true in development to see errors in console
             reportOnly: process.env.NODE_ENV === 'development'
         })
     );
 
-    // Make nonce available to your views
     res.locals.cspNonce = nonce;
     next();
 });
 
+// Initialize Socket.IO after middleware setup
+initializeSocket(server);
+
+// Routes
 app.use("/api", baseRouter);
 app.use("/gold_api", apiRouter);
 
-app.listen(config.port, () => {
+// Start server using the HTTP server instance
+server.listen(config.port, () => {
     console.log(`Server is running on port ${config.port}`);
-
     database.sync();
+});
+
+// Handle server errors
+server.on('error', (error) => {
+    console.error('Server error:', error);
+});
+
+// Handle process termination
+process.on('SIGTERM', () => {
+    server.close(() => {
+        console.log('Server terminated');
+        process.exit(0);
+    });
 });

@@ -26,6 +26,7 @@ db.userGameHistory = require("./userGameHistoryModel")(sequelize, Sequelize);
 db.userBetInfo = require("./userBetInfoModel")(sequelize, Sequelize);
 db.game = require("./gameModel")(sequelize, Sequelize);
 db.vipLevel = require("./vipLevel")(sequelize, Sequelize);
+db.chat_history = require("./chatHistoryModel.js")(sequelize, Sequelize);
 db.vipStatus = require("./vipStatus")(sequelize, Sequelize);
 
 db.sync = async () => {
