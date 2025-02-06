@@ -59,6 +59,14 @@ module.exports = (sequelize, Sequelize) => {
                 type: Sequelize.BOOLEAN,
                 defaultValue: false,
             },
+            isOriginal: {
+                type: Sequelize.BOOLEAN,
+                defaultValue: false,
+            },
+            isImproved: {
+                type: Sequelize.BOOLEAN,
+                defaultValue: false,
+            },
             status: {
                 type: Sequelize.BOOLEAN,
                 defaultValue: true,

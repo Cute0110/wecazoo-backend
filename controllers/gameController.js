@@ -1,6 +1,7 @@
 const Joi = require("joi");
 const db = require("../models");
 const Game = db.game;
+const Provider = db.provider;
 const { errorHandler } = require("../utils/helper");
 const { eot, dot } = require('../utils/cryptoUtils');
 const { Op } = require("sequelize");
@@ -31,9 +32,14 @@ exports.getAllGames = async (req, res) => {
             ],
         });
 
+        const providerData = await Provider.findAndCountAll({
+            where: { status: true },
+        });
+
         return res.json(eot({
             status: 1,
             data: data.rows,
+            providerData: providerData.rows,
             length: Number(length),
             start: Number(start),
             totalCount: data.count,

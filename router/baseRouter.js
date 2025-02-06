@@ -6,6 +6,7 @@ const config = require("../config/main");
 const userController = require("../controllers/userController");
 const influencerController = require("../controllers/influencerController");
 const gameController = require("../controllers/gameController");
+const providerController = require("../controllers/providerController");
 const apiController = require("../controllers/apiController");
 const paymentController = require("../controllers/paymentController");
 const vipController = require("../controllers/vipController");
@@ -54,6 +55,8 @@ router.post("/influencer_create", adminAuthenticate, influencerController.onCrea
 router.post("/influencer_delete", adminAuthenticate, influencerController.onDelete);
 router.post("/influencer_status_change", adminAuthenticate, influencerController.onStatusChange);
 router.post("/influencer_transaction", adminAuthenticate, influencerController.onTransaction);
+
+router.post("/provider_list", providerController.getAllProviders);
 
 //Games
 router.post("/game_list", gameController.getAllGames);
