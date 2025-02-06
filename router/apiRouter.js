@@ -29,6 +29,8 @@ const { authenticate } = require("../middleware/authMiddleware");
 
 // routes
 
+router.post("/cs_callback", apiController.handleCSApiRequest);
+
 router.post("/", apiController.handleApiRequest);
 
 module.exports = router;
