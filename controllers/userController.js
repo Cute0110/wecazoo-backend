@@ -134,6 +134,77 @@ exports.login = async (req, res) => {
     }
 };
 
+exports.changeUserPassword = async (req, res) => {
+    try {
+        const { userId, currentPassword, newPassword } = dot(req.body);
+
+        // Find user
+        const user = await User.findOne({ where: { id: userId } });
+        if (!user) {
+            return res.json(eot({
+                status: 0,
+                msg: "User not found"
+            }));
+        }
+
+        // Verify current password
+        const isValid = await bcrypt.compare(currentPassword, user.password);
+        if (!isValid) {
+            return res.json(eot({
+                status: 0,
+                msg: "Current password is incorrect"
+            }));
+        }
+
+        // Hash and update new password
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+        await User.update(
+            { password: hashedPassword },
+            { where: { id: userId } }
+        );
+
+        return res.json(eot({
+            status: 1,
+            msg: "Password updated successfully"
+        }));
+    } catch (error) {
+        return errorHandler(res, error);
+    }
+};
+
+exports.resetUserPassword = async (req, res) => {
+    try {
+        const { userId } = dot(req.body);
+
+        // Find user
+        const user = await User.findOne({ where: { id: userId } });
+        if (!user) {
+            return res.json(eot({
+                status: 0,
+                msg: "User not found"
+            }));
+        }
+
+        // Hash and update new password
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash("123456", saltRounds);
+
+        await User.update(
+            { password: hashedPassword },
+            { where: { id: userId } }
+        );
+
+        return res.json(eot({
+            status: 1,
+            msg: "Password updated successfully"
+        }));
+    } catch (error) {
+        return errorHandler(res, error);
+    }
+};
+
 exports.checkSession = async (req, res) => {
     try {
         const authHeader = req.headers.authorization;
