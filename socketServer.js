@@ -12,7 +12,7 @@ const onlineUsers = new Map(); // Track online users
 const initializeSocket = (server) => {
   io = socketIO(server, {
     cors: {
-      origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
+      origin: ["http://localhost:3000", "https://wecazoo.com"],
       credentials: true,
     },
     transports: ['websocket', 'polling']

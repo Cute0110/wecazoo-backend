@@ -12,7 +12,7 @@ exports.createInvoice = async (payment) => {
     cancel_url: `${config.frontendURL}/wallet`,
     order_id: payment.id,
     is_fixed_rate: true,
-    is_fee_paid_by_user: true,
+    is_fee_paid_by_user: false,
     order_description: payment.description || 'Payment Invoice'
   };
 

@@ -16,7 +16,7 @@ const config = require("./config/main");
 
 // CORS configuration
 app.use(cors({
-    origin: "http://localhost:3000",
+    origin: "https://wecazoo.com",
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 }));

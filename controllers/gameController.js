@@ -19,12 +19,12 @@ exports.getAllGames = async (req, res) => {
                 [Op.or]: [
                     { name: { [Op.substring]: search } },
                     { gameCode: { [Op.substring]: search } }
-                ],
+                ]
             };
         }
 
         const data = await Game.findAndCountAll({
-            where: query,
+            where: { status: true },
             offset: Number(start),
             limit: length == 0 ? null : Number(length),
             order: [
@@ -82,30 +82,54 @@ exports.onOriginalStatusChange = async (req, res) => {
 exports.onGameLaunch = async (req, res) => {
     try {
         const { userCode, providerCode, gameCode } = dot(req.body);
+        let apiEndpoint = config.apiEndPoint;
+        if (providerCode == "CS") {
+            apiEndpoint = config.csApiEndPoint;
+            const jsonBody = {
+                "hall": config.hall,
+                "key": config.agent_code,
+                "login": userCode,
+                "gameId": gameCode,
+                "domain": config.frontendURL,
+                "language": "en",
+            };
+            const result = await axios.post(apiEndpoint, jsonBody);
 
-        const nexusURL = config.apiEndPoint;
-        const jsonBody = {
-            "method": "game_launch",
-            "agent_code": config.agent_code,
-            "agent_token": config.agent_token,
-            "user_code": userCode,
-            "provider_code": providerCode,
-            "game_code": gameCode,
-            "lang": "en"
-        };
-        const result = await axios.post(nexusURL, jsonBody);
+            if (result.data.status == 0) {
+                return res.json(eot({
+                    status: 0,
+                    msg: result.data.msg,
+                }));
+            }
 
-        if (result.data.status == 0) {
             return res.json(eot({
-                status: 0,
-                msg: result.data.msg,
-            }));
-        }
+                status: result.data.status === "success",
+                launch_url: result.data.content.game.url,
+            }))
+        } else {
+            const jsonBody = {
+                "method": "game_launch",
+                "agent_code": config.agent_code,
+                "agent_token": config.agent_token,
+                "user_code": userCode,
+                "provider_code": providerCode,
+                "game_code": gameCode,
+                "lang": "en"
+            };
+            const result = await axios.post(apiEndpoint, jsonBody);
 
-        return res.json(eot({
-            status: result.data.status,
-            launch_url: result.data.launch_url,
-        }))
+            if (result.data.status == 0) {
+                return res.json(eot({
+                    status: 0,
+                    msg: result.data.msg,
+                }));
+            }
+
+            return res.json(eot({
+                status: result.data.status,
+                launch_url: result.data.launch_url,
+            }))
+        }
     } catch (error) {
         return errorHandler(res, error);
     }
