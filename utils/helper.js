@@ -3,7 +3,7 @@ const { eot, dot } = require('./cryptoUtils');
 
 exports.errorHandler = (res, error, statusCode = 400) => {
     let errorMessage = "";
-    console.log("ErrorHandler Error!!!!!!!!!!!", error.message);
+    console.log("ErrorHandler Error!!!!!!!!!!!", error);
 
     if (typeof error == "object") {
         errorMessage = error.message;
