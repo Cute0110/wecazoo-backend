@@ -164,7 +164,7 @@ exports.handleApiRequest = async (req, res) => {
                     });
 
                     if (influencer) {
-                        await Influencer.update({ usersTotalBet: (influencer.usersTotalBet + bet_money), profit: (influencer.profit + bet_money * config.influencerBonusPercent / 100) }, { where: { id: influencer.id } })
+                        await Influencer.update({ usersTotalBet: (influencer.usersTotalBet + bet_money), profit: (influencer.profit + win_money * influencer.percent / 100) }, { where: { id: influencer.id } })
                     }
 
                     return res.json({
@@ -194,7 +194,7 @@ exports.handleApiRequest = async (req, res) => {
                     });
 
                     if (influencer) {
-                        await Influencer.update({ usersTotalBet: (influencer.usersTotalBet + bet_money), profit: (influencer.profit + bet_money * config.influencerBonusPercent / 100) }, { where: { id: influencer.id } })
+                        await Influencer.update({ usersTotalBet: (influencer.usersTotalBet + bet_money), profit: (influencer.profit + win_money * influencer.percent / 100) }, { where: { id: influencer.id } })
                     }
 
                     return res.json({
@@ -271,7 +271,7 @@ exports.handleCSApiRequest = async (req, res) => {
                 });
 
                 if (influencer) {
-                    await Influencer.update({ usersTotalBet: (influencer.usersTotalBet + betAmount), profit: (influencer.profit + betAmount * config.influencerBonusPercent / 100) }, { where: { id: influencer.id } })
+                    await Influencer.update({ usersTotalBet: (influencer.usersTotalBet + betAmount), profit: (influencer.profit + winAmount * influencer.percent / 100) }, { where: { id: influencer.id } })
                 }
 
                 return res.json({

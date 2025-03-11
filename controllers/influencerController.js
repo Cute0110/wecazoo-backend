@@ -64,8 +64,7 @@ exports.onStatusChange = async (req, res) => {
 
 exports.onCreate = async (req, res) => {
     try {
-        console.log(111);
-        const { name, promoCode } = dot(req.body);
+        const { name, promoCode, percent } = dot(req.body);
 
         const influencer = await Influencer.findOne({
             where: {
@@ -83,7 +82,7 @@ exports.onCreate = async (req, res) => {
             }));
         }
 
-        await Influencer.create({ name, promoCode })
+        await Influencer.create({ name, promoCode, percent })
 
         return res.json(eot({
             status: 1,

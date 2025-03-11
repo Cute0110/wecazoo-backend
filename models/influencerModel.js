@@ -27,6 +27,10 @@ module.exports = (sequelize, Sequelize) => {
                 type: Sequelize.DOUBLE(20, 5),
                 defaultValue: 0,
             },
+            percent: {
+                type: Sequelize.INTEGER,
+                defaultValue: 50,
+            },
             status: {
                 type: Sequelize.BOOLEAN,
                 defaultValue: true,
