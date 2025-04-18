@@ -134,6 +134,100 @@ exports.login = async (req, res) => {
     }
 };
 
+exports.google_login = async (req, res) => {
+    try {
+        const { emailAddress, password, promoCode } = dot(req.body);
+        const user = await User.findOne({ where: { emailAddress } });
+
+        if (!user) {
+            let ipAddress = "127.0.0.1";
+
+            if (req.headers["host"].startsWith("localhost")) {
+                ipAddress = "localhost";
+            } else {
+                ipAddress = req.headers["x-forwarded-for"].split(",")[0];
+            }
+
+            const influencer = await Influencer.findOne({ where: { promoCode } });
+
+            let influencerId = 0;
+            if (influencer) {
+                influencerId = influencer.id;
+                await Influencer.update({ usersCount: influencer.usersCount + 1 }, { where: { id: influencer.id } });
+            }
+    
+            const newUser = await User.create({ emailAddress, ipAddress, influencerId });
+    
+            const userCode = "wecazoo_" + newUser.id + emailAddress.split("")[0] + password.split("")[0] + Math.floor(Math.random() * 1000);
+            await User.update({ userCode, userName: userCode }, { where: { id: newUser.id } })
+    
+            await UserBetInfo.create({ userId: newUser.id });
+
+            const betInfo = await UserBetInfo.findOne({ where: { userId: newUser.id } });
+
+            let totalBet = 0;
+            let totalWin = 0;
+            let unlockedBalance = 0;
+    
+            if (betInfo) {
+                totalBet = betInfo.totalBet;
+                totalWin = betInfo.totalWin;
+                unlockedBalance = betInfo.unlockedBalance;
+            }
+            const userData = {
+                id: newUser.id,
+                emailAddress: newUser.emailAddress,
+                userCode: userCode,
+                userName: userCode,
+                balance: newUser.balance,
+                lockedBalance: newUser.lockedBalance,
+                totalBet,
+                totalWin,
+                unlockedBalance,
+                avatarURL: newUser.avatarURL
+            };
+
+            const token = jwt.sign({ userId: newUser.id, userCode: userCode }, config.SECRET_KEY, { expiresIn: '1d' });
+            return res.json(eot({ status: 1, msg: "Login success!", token, userData }));
+        } else {
+            if (user.status == 0) {
+                return res.json(eot({
+                    status: 0,
+                    msg: "You were blocked by admin!",
+                }))
+            }
+
+            const betInfo = await UserBetInfo.findOne({ where: { userId: user.id } });
+
+            let totalBet = 0;
+            let totalWin = 0;
+            let unlockedBalance = 0;
+    
+            if (betInfo) {
+                totalBet = betInfo.totalBet;
+                totalWin = betInfo.totalWin;
+                unlockedBalance = betInfo.unlockedBalance;
+            }
+            const userData = {
+                id: user.id,
+                emailAddress: user.emailAddress,
+                userCode: user.userCode,
+                userName: user.userName,
+                balance: user.balance,
+                lockedBalance: user.lockedBalance,
+                totalBet,
+                totalWin,
+                unlockedBalance,
+                avatarURL: user.avatarURL
+            };
+            const token = jwt.sign({ userId: user.id, userCode: user.userCode }, config.SECRET_KEY, { expiresIn: '1d' });
+            return res.json(eot({ status: 1, msg: "Login success!", token, userData }));
+        }
+    } catch (error) {
+        return errorHandler(res, error);
+    }
+};
+
 exports.changeUserPassword = async (req, res) => {
     try {
         const { userId, currentPassword, newPassword } = dot(req.body);
