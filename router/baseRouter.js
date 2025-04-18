@@ -10,6 +10,7 @@ const providerController = require("../controllers/providerController");
 const apiController = require("../controllers/apiController");
 const paymentController = require("../controllers/paymentController");
 const vipController = require("../controllers/vipController");
+const paypalPaymentController = require("../controllers/paypalPaymentController");
 const { authenticate, adminAuthenticate } = require("../middleware/authMiddleware");
 
 // const checkIp = async (req, res, next) => {
@@ -91,5 +92,9 @@ router.post("/vip/update-status", authenticate, vipController.updateUserVipStatu
 router.post("/get_deposit_histories", adminAuthenticate, paymentController.getAllDepositHistory);
 router.post("/get_withdraw_histories", adminAuthenticate, paymentController.getAllWithdrawHistory);
 router.post("/withdraw_confirm", adminAuthenticate, paymentController.onWithdrawConfirm);
+
+// Create PayPal Payment
+router.post("/create_order", authenticate, paypalPaymentController.createOrder);
+router.post("/capture_order", authenticate, paypalPaymentController.captureOrder);
 
 module.exports = router;

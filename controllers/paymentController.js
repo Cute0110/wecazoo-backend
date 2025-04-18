@@ -37,6 +37,7 @@ exports.createInvoice = async (req, res) => {
         }
 
         const newUserBalanceHistory = await UserBalanceHistory.create({ userId: decoded.userId, userPrevBalance: user.balance, userAfterBalance: user.balance, sentAmount: price, type: "Deposit", status: "Waiting" });
+        await UserBalanceHistory.update({orderId: newUserBalanceHistory.id}, {where: {id: newUserBalanceHistory.id}});
 
         const invoiceData = {
             price,

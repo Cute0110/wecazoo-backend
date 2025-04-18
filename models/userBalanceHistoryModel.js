@@ -7,6 +7,10 @@ module.exports = (sequelize, Sequelize) => {
                 primaryKey: true,
                 autoIncrement: true,
             },
+            orderId: {
+                type: Sequelize.STRING,
+                defaultValue: "",
+            },
             userId: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
