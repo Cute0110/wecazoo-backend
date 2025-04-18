@@ -16,7 +16,7 @@ const config = require("./config/main");
 
 // CORS configuration
 app.use(cors({
-    origin: "https://wecazoo.com",
+    origin: process.env.NEXT_PUBLIC_FRONTEND_URL,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 }));
